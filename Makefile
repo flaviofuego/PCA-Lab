@@ -9,6 +9,7 @@ DATA_DIR = data
 PYTHON_DIR = python
 SRC_DIR = src
 REPORT_DIR = report
+CURRENT_DIR = $(shell cd)
 
 # Colores para output (Windows PowerShell)
 BLUE = [94m
@@ -69,7 +70,7 @@ run:
 	@echo "======================================"
 	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
 	@echo "Montando volumenes y ejecutando contenedor..."
-	docker run --rm -v "%cd%/$(DATA_DIR):/app/data" -v "%cd%/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
+	docker run --rm -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
 	@echo ""
 	@echo "======================================"
 	@echo "  PCA ejecutado exitosamente!"
@@ -99,7 +100,7 @@ validate:
 	@echo "======================================"
 	@if not exist "$(REPORT_DIR)" mkdir "$(REPORT_DIR)"
 	@if not exist "$(REPORT_DIR)/comparison_plots" mkdir "$(REPORT_DIR)/comparison_plots"
-	python $(PYTHON_DIR)/validate_pca.py
+	cd $(PYTHON_DIR) && python validate_pca.py
 	@echo ""
 	@echo "Validacion completada. Ver resultados en $(REPORT_DIR)/"
 
@@ -124,6 +125,18 @@ clean-all: clean
 
 # Ejecutar todos los pasos
 all-steps: setup generate-data build run validate
+	@echo ""
+	@echo "======================================"
+	@echo "  Proceso completado exitosamente"
+	@echo "======================================"
+	@echo ""
+	@echo "Revisa los resultados en:"
+	@echo "  - Datos de entrada: $(DATA_DIR)/input_data.csv"
+	@echo "  - Datos de salida: $(DATA_DIR)/output_data.csv"
+	@echo "  - Graficas: $(REPORT_DIR)/comparison_plots/"
+	@echo "  - Reporte: $(REPORT_DIR)/comparison_report.txt"
+
+all: generate-data build run validate
 	@echo ""
 	@echo "======================================"
 	@echo "  Proceso completado exitosamente"
