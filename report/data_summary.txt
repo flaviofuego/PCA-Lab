@@ -1,0 +1,101 @@
+======================================================================
+RESUMEN DE DATOS SINTÉTICOS GENERADOS
+======================================================================
+
+Número de muestras: 500
+Número de dimensiones: 10
+Número de clases: 2
+
+Distribución de clases:
+  Clase 0: 250 muestras (50.00%)
+  Clase 1: 250 muestras (50.00%)
+
+======================================================================
+ESTADÍSTICAS POR DIMENSIÓN
+======================================================================
+
+Dimensión 0:
+  Media:              4.862287
+  Desviación estándar: 1.122467
+  Mínimo:             1.110810
+  Máximo:             8.487818
+  Mediana:            4.978321
+
+Dimensión 1:
+  Media:              2.495239
+  Desviación estándar: 1.777409
+  Mínimo:             -2.193250
+  Máximo:             7.623794
+  Mediana:            2.366593
+
+Dimensión 2:
+  Media:              -2.225920
+  Desviación estándar: 3.699257
+  Mínimo:             -12.469459
+  Máximo:             11.203325
+  Mediana:            -2.304940
+
+Dimensión 3:
+  Media:              3.372146
+  Desviación estándar: 4.906233
+  Mínimo:             -13.344687
+  Máximo:             20.563352
+  Mediana:            3.009088
+
+Dimensión 4:
+  Media:              -2.798274
+  Desviación estándar: 1.682315
+  Mínimo:             -7.242858
+  Máximo:             2.675045
+  Mediana:            -2.887202
+
+Dimensión 5:
+  Media:              -2.574254
+  Desviación estándar: 2.075295
+  Mínimo:             -8.645345
+  Máximo:             4.501842
+  Mediana:            -2.575300
+
+Dimensión 6:
+  Media:              -5.211583
+  Desviación estándar: 2.869361
+  Mínimo:             -13.231398
+  Máximo:             5.122403
+  Mediana:            -5.414677
+
+Dimensión 7:
+  Media:              -2.980832
+  Desviación estándar: 2.250097
+  Mínimo:             -11.363087
+  Máximo:             4.865960
+  Mediana:            -2.933195
+
+Dimensión 8:
+  Media:              -2.900173
+  Desviación estándar: 3.250666
+  Mínimo:             -12.758718
+  Máximo:             7.684390
+  Mediana:            -2.748000
+
+Dimensión 9:
+  Media:              -0.259738
+  Desviación estándar: 1.015242
+  Mínimo:             -4.472438
+  Máximo:             2.820589
+  Mediana:            -0.174703
+
+======================================================================
+MATRIZ DE COVARIANZA
+======================================================================
+
+Valores en la diagonal (varianzas):
+  Dim 0: 1.262457
+  Dim 1: 3.165515
+  Dim 2: 13.711924
+  Dim 3: 24.119362
+  Dim 4: 2.835857
+  Dim 5: 4.315482
+  Dim 6: 8.249733
+  Dim 7: 5.073084
+  Dim 8: 10.588007
+  Dim 9: 1.032783
