@@ -11,7 +11,13 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification, make_blobs
 import os
+from pathlib import Path
 import argparse
+
+# Determinar rutas absolutas basadas en la ubicación del script
+SCRIPT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = SCRIPT_DIR.parent
+DATA_DIR = PROJECT_ROOT / 'data'
 
 
 def generate_synthetic_data(n_samples=500, n_features=10, n_informative=8, 
@@ -108,7 +114,7 @@ def generate_blobs_data(n_samples=500, n_features=10, centers=3, random_state=42
     return X, y
 
 
-def save_to_csv(X, y, output_dir='../data', filename='input_data.csv', 
+def save_to_csv(X, y, output_dir=None, filename='input_data.csv', 
                 labels_filename='labels.csv'):
     """
     Guarda los datos en formato CSV.
@@ -119,19 +125,25 @@ def save_to_csv(X, y, output_dir='../data', filename='input_data.csv',
         Matriz de datos
     y : numpy.ndarray
         Etiquetas (se guardan por separado para referencia)
-    output_dir : str
-        Directorio de salida
+    output_dir : str or Path
+        Directorio de salida (si es None, usa DATA_DIR por defecto)
     filename : str
         Nombre del archivo para los datos
     labels_filename : str
         Nombre del archivo para las etiquetas
     """
+    # Usar DATA_DIR por defecto
+    if output_dir is None:
+        output_dir = DATA_DIR
+    else:
+        output_dir = Path(output_dir).resolve()
+    
     # Crear directorio si no existe
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     # Ruta completa del archivo
-    filepath = os.path.join(output_dir, filename)
-    labels_filepath = os.path.join(output_dir, labels_filename)
+    filepath = output_dir / filename
+    labels_filepath = output_dir / labels_filename
     
     # Guardar datos (sin encabezados, solo valores numéricos)
     # Formato: cada fila es una muestra, cada columna es una dimensión
@@ -147,12 +159,12 @@ def save_to_csv(X, y, output_dir='../data', filename='input_data.csv',
     # También guardar una versión con pandas para inspección
     df = pd.DataFrame(X, columns=[f'dim_{i}' for i in range(X.shape[1])])
     df['label'] = y
-    info_filepath = os.path.join(output_dir, 'input_data_with_labels.csv')
+    info_filepath = output_dir / 'input_data_with_labels.csv'
     df.to_csv(info_filepath, index=False)
     print(f"✓ Datos con etiquetas (para inspección): {info_filepath}")
 
 
-def generate_statistics(X, output_dir='../data'):
+def generate_statistics(X, output_dir=None):
     """
     Genera estadísticas descriptivas de los datos.
     
@@ -160,10 +172,16 @@ def generate_statistics(X, output_dir='../data'):
     -----------
     X : numpy.ndarray
         Matriz de datos
-    output_dir : str
-        Directorio de salida
+    output_dir : str or Path
+        Directorio de salida (si es None, usa DATA_DIR por defecto)
     """
-    stats_filepath = os.path.join(output_dir, 'data_statistics.txt')
+    # Usar DATA_DIR por defecto
+    if output_dir is None:
+        output_dir = DATA_DIR
+    else:
+        output_dir = Path(output_dir).resolve()
+    
+    stats_filepath = output_dir / 'data_statistics.txt'
     
     with open(stats_filepath, 'w') as f:
         f.write("=" * 60 + "\n")
@@ -211,15 +229,19 @@ def main():
         help='Tipo de datos a generar (default: classification)'
     )
     parser.add_argument(
-        '--output', '-o', type=str, default='../data',
-        help='Directorio de salida (default: ../data)'
+        '--output', '-o', type=str, default=None,
+        help=f'Directorio de salida (default: {DATA_DIR})'
     )
     
     args = parser.parse_args()
     
+    # Si no se especifica output, usar DATA_DIR
+    output_dir = Path(args.output).resolve() if args.output else DATA_DIR
+    
     print("=" * 60)
     print("GENERACIÓN DE DATOS SINTÉTICOS PARA PCA")
     print("=" * 60)
+    print(f"Directorio de salida: {output_dir}")
     print()
     
     # Generar datos según el tipo seleccionado
@@ -238,10 +260,10 @@ def main():
         )
     
     # Guardar datos
-    save_to_csv(X, y, output_dir=args.output)
+    save_to_csv(X, y, output_dir=output_dir)
     
     # Generar estadísticas
-    generate_statistics(X, output_dir=args.output)
+    generate_statistics(X, output_dir=output_dir)
     
     print("\n" + "=" * 60)
     print("✓ Generación completada exitosamente")

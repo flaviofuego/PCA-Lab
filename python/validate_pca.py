@@ -15,13 +15,20 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from pathlib import Path
 import sys
 
+# Determinar rutas absolutas basadas en la ubicación del script
+SCRIPT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = SCRIPT_DIR.parent
+DATA_DIR = PROJECT_ROOT / 'data'
+REPORT_DIR = PROJECT_ROOT / 'report'
+PLOTS_DIR = REPORT_DIR / 'comparison_plots'
+
 # Configuración de estilo
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (14, 10)
 plt.rcParams['font.size'] = 10
 
 
-def load_data(data_dir='../data'):
+def load_data(data_dir=None):
     """
     Carga los datos de entrada y salida.
     
@@ -34,7 +41,10 @@ def load_data(data_dir='../data'):
     y : numpy.ndarray
         Etiquetas (para visualización)
     """
-    data_path = Path(data_dir)
+    if data_dir is None:
+        data_path = DATA_DIR
+    else:
+        data_path = Path(data_dir).resolve()
     
     print("=" * 70)
     print("CARGANDO DATOS")
@@ -90,7 +100,7 @@ def apply_sklearn_pca(X, n_components=2):
     return X_sklearn, pca
 
 
-def compare_numerical(X_c, X_sklearn, output_dir='../report'):
+def compare_numerical(X_c, X_sklearn, output_dir=None):
     """
     Compara numéricamente los resultados de C y sklearn.
     
@@ -100,34 +110,41 @@ def compare_numerical(X_c, X_sklearn, output_dir='../report'):
         Datos proyectados por C
     X_sklearn : numpy.ndarray
         Datos proyectados por sklearn
-    output_dir : str
+    output_dir : str or Path
         Directorio para guardar resultados
     """
     print("\n" + "=" * 70)
     print("COMPARACIÓN NUMÉRICA")
     print("=" * 70)
     
-    output_path = Path(output_dir)
+    if output_dir is None:
+        output_path = REPORT_DIR
+    else:
+        output_path = Path(output_dir).resolve()
+    
     output_path.mkdir(parents=True, exist_ok=True)
     
-    # Los componentes pueden tener signos opuestos (son equivalentes)
-    # Verificar ambas posibilidades
-    mse_normal = mean_squared_error(X_sklearn, X_c)
-    mse_flipped = mean_squared_error(X_sklearn, -X_c)
+    # Los componentes pueden tener signos opuestos independientemente (son equivalentes)
+    # Verificar cada componente individualmente
+    X_c_adjusted = X_c.copy()
+    flipped_components = []
     
-    mae_normal = mean_absolute_error(X_sklearn, X_c)
-    mae_flipped = mean_absolute_error(X_sklearn, -X_c)
+    for i in range(X_c.shape[1]):
+        # Calcular correlación para este componente
+        corr = np.corrcoef(X_sklearn[:, i], X_c[:, i])[0, 1]
+        
+        # Si la correlación es negativa, invertir el componente para alinearlo
+        if corr < 0:
+            X_c_adjusted[:, i] = -X_c[:, i]
+            flipped_components.append(i + 1)
     
-    # Usar la mejor comparación
-    if mse_flipped < mse_normal:
-        X_c_adjusted = -X_c
-        mse = mse_flipped
-        mae = mae_flipped
-        sign_note = " (con inversión de signo)"
+    # Calcular métricas con componentes ajustados
+    mse = mean_squared_error(X_sklearn, X_c_adjusted)
+    mae = mean_absolute_error(X_sklearn, X_c_adjusted)
+    
+    if flipped_components:
+        sign_note = f" (componentes invertidos: PC{', PC'.join(map(str, flipped_components))})"
     else:
-        X_c_adjusted = X_c
-        mse = mse_normal
-        mae = mae_normal
         sign_note = ""
     
     # Calcular correlación
@@ -184,7 +201,7 @@ def compare_numerical(X_c, X_sklearn, output_dir='../report'):
     return X_c_adjusted, correlations
 
 
-def plot_comparisons(X_c, X_sklearn, y, output_dir='../report/comparison_plots'):
+def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     """
     Genera gráficas comparativas.
     
@@ -196,14 +213,18 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir='../report/comparison_plots')
         Datos proyectados por sklearn
     y : numpy.ndarray
         Etiquetas
-    output_dir : str
+    output_dir : str or Path
         Directorio para guardar gráficas
     """
     print("\n" + "=" * 70)
     print("GENERANDO GRÁFICAS COMPARATIVAS")
     print("=" * 70)
     
-    output_path = Path(output_dir)
+    if output_dir is None:
+        output_path = PLOTS_DIR
+    else:
+        output_path = Path(output_dir).resolve()
+    
     output_path.mkdir(parents=True, exist_ok=True)
     
     # 1. Scatter plot lado a lado
@@ -255,7 +276,373 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir='../report/comparison_plots')
     print(f"✓ Overlay plot guardado")
     plt.close()
     
-    # 3. Scatter plots por componente
+    # 3. NUEVO: Comparación con contornos de densidad (KDE)
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    # Crear una paleta de colores para las clases
+    colors = plt.cm.Set1(np.linspace(0, 1, len(np.unique(y))))
+    
+    # Graficar sklearn con contornos de densidad (sombreado)
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        
+        # sklearn: Contornos de densidad KDE con relleno
+        try:
+            from scipy.stats import gaussian_kde
+            
+            # Calcular KDE para sklearn
+            if np.sum(mask) > 3:  # Necesitamos al menos 3 puntos para KDE
+                xy_sklearn = np.vstack([X_sklearn[mask, 0], X_sklearn[mask, 1]])
+                kde_sklearn = gaussian_kde(xy_sklearn)
+                
+                # Crear grid para evaluar KDE
+                x_min = min(X_sklearn[:, 0].min(), X_c[:, 0].min()) - 1
+                x_max = max(X_sklearn[:, 0].max(), X_c[:, 0].max()) + 1
+                y_min = min(X_sklearn[:, 1].min(), X_c[:, 1].min()) - 1
+                y_max = max(X_sklearn[:, 1].max(), X_c[:, 1].max()) + 1
+                
+                xx, yy = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+                positions = np.vstack([xx.ravel(), yy.ravel()])
+                
+                # Evaluar KDE
+                z_sklearn = np.reshape(kde_sklearn(positions).T, xx.shape)
+                
+                # Dibujar contornos rellenos (sombreado) para sklearn
+                contour_sklearn = ax.contourf(xx, yy, z_sklearn, levels=8, 
+                                             colors=[colors[idx]], alpha=0.25, 
+                                             antialiased=True)
+                # Contornos de línea para mayor claridad
+                ax.contour(xx, yy, z_sklearn, levels=8, colors=[colors[idx]], 
+                          alpha=0.4, linewidths=1, linestyles='dashed')
+                
+        except ImportError:
+            # Si no hay scipy, usar scatter con alpha bajo
+            ax.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1], 
+                      alpha=0.15, s=100, c=[colors[idx]], 
+                      edgecolors='none')
+    
+    # Graficar C implementation con puntos sólidos encima
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax.scatter(X_c[mask, 0], X_c[mask, 1], 
+                  alpha=0.8, s=25, c=[colors[idx]], 
+                  edgecolors='black', linewidths=0.5,
+                  label=f'Clase {int(class_label)} (C impl.)',
+                  marker='o')
+    
+    # Leyenda personalizada
+    from matplotlib.patches import Patch
+    from matplotlib.lines import Line2D
+    
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', 
+               markersize=8, markeredgecolor='black', markeredgewidth=0.5,
+               label='Implementación C (puntos)', linestyle='None'),
+        Patch(facecolor='gray', alpha=0.25, label='sklearn (densidad KDE)')
+    ]
+    
+    # Agregar elementos de clase
+    for idx, class_label in enumerate(np.unique(y)):
+        legend_elements.append(
+            Line2D([0], [0], marker='o', color='w', 
+                   markerfacecolor=colors[idx], markersize=8,
+                   label=f'Clase {int(class_label)}', linestyle='None')
+        )
+    
+    ax.legend(handles=legend_elements, loc='best', framealpha=0.9)
+    
+    ax.set_xlabel('PC1', fontsize=12, fontweight='bold')
+    ax.set_ylabel('PC2', fontsize=12, fontweight='bold')
+    ax.set_title('Comparación con Densidad KDE: C (puntos) vs sklearn (sombreado)', 
+                fontsize=14, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.2, linestyle='--')
+    
+    # Añadir anotación explicativa
+    textstr = ('sklearn: Áreas sombreadas (densidad KDE)\n'
+              'C implementation: Puntos sólidos\n'
+              'Coincidencia perfecta: puntos dentro del área')
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
+            verticalalignment='top', bbox=props)
+    
+    plt.tight_layout()
+    plt.savefig(output_path / 'pca_kde_overlay.png', dpi=300, bbox_inches='tight')
+    print(f"✓ KDE density overlay guardado")
+    plt.close()
+    
+    # 4. NUEVO: Campo Vectorial de Diferencias (Vector Field)
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    # Calcular diferencias (vectores)
+    diff_vectors = X_c - X_sklearn
+    magnitudes = np.sqrt(np.sum(diff_vectors**2, axis=1))
+    
+    # Normalizar colores por magnitud de error
+    norm = plt.Normalize(vmin=magnitudes.min(), vmax=magnitudes.max())
+    cmap = plt.cm.RdYlGn_r  # Rojo = alto error, Verde = bajo error
+    
+    # Graficar puntos sklearn como base
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1], 
+                  alpha=0.6, s=80, c='lightblue',
+                  edgecolors='blue', linewidths=1.5,
+                  label=f'Clase {int(class_label)} (sklearn base)',
+                  marker='o', zorder=2)
+    
+    # Graficar flechas (vectores de diferencia)
+    # Usar subset para no saturar (si hay muchos puntos)
+    n_arrows = min(len(X_sklearn), 200)  # Máximo 200 flechas
+    indices = np.random.choice(len(X_sklearn), n_arrows, replace=False)
+    
+    for i in indices:
+        color = cmap(norm(magnitudes[i]))
+        ax.arrow(X_sklearn[i, 0], X_sklearn[i, 1],
+                diff_vectors[i, 0], diff_vectors[i, 1],
+                head_width=0.3, head_length=0.2,
+                fc=color, ec=color, alpha=0.7,
+                length_includes_head=True, zorder=3)
+    
+    # Graficar puntos C como destino
+    scatter_c = ax.scatter(X_c[:, 0], X_c[:, 1], 
+                          c=magnitudes, cmap=cmap, norm=norm,
+                          s=50, edgecolors='black', linewidths=0.5,
+                          marker='x', alpha=0.8, zorder=4,
+                          label='C implementation (destino)')
+    
+    # Colorbar para magnitud de diferencias
+    cbar = plt.colorbar(scatter_c, ax=ax, label='Magnitud de Diferencia')
+    cbar.ax.tick_params(labelsize=10)
+    
+    ax.set_xlabel('PC1', fontsize=12, fontweight='bold')
+    ax.set_ylabel('PC2', fontsize=12, fontweight='bold')
+    ax.set_title('Campo Vectorial de Diferencias: sklearn → C\n' +
+                'Flechas muestran dirección y magnitud de diferencias',
+                fontsize=14, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.2, linestyle='--')
+    ax.legend(loc='best', framealpha=0.9)
+    
+    # Estadísticas
+    textstr = (f'Diferencia promedio: {magnitudes.mean():.2e}\n'
+              f'Diferencia máxima: {magnitudes.max():.2e}\n'
+              f'Diferencia mínima: {magnitudes.min():.2e}')
+    props = dict(boxstyle='round', facecolor='lightgray', alpha=0.8)
+    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
+            verticalalignment='top', bbox=props)
+    
+    plt.tight_layout()
+    plt.savefig(output_path / 'pca_vector_field.png', dpi=300, bbox_inches='tight')
+    print(f"✓ Vector field guardado")
+    plt.close()
+    
+    # 5. NUEVO: Side-by-Side con Líneas Conectoras
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
+    
+    # Colores por clase
+    colors_class = plt.cm.Set1(np.linspace(0, 1, len(np.unique(y))))
+    
+    # Subplot 1: sklearn
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax1.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1],
+                   c=[colors_class[idx]], alpha=0.7, s=60,
+                   edgecolors='black', linewidths=0.5,
+                   label=f'Clase {int(class_label)}')
+    
+    ax1.set_xlabel('PC1', fontsize=11, fontweight='bold')
+    ax1.set_ylabel('PC2', fontsize=11, fontweight='bold')
+    ax1.set_title('sklearn PCA', fontsize=13, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    ax1.legend(loc='best')
+    
+    # Subplot 2: C implementation
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax2.scatter(X_c[mask, 0], X_c[mask, 1],
+                   c=[colors_class[idx]], alpha=0.7, s=60,
+                   edgecolors='black', linewidths=0.5,
+                   label=f'Clase {int(class_label)}')
+    
+    ax2.set_xlabel('PC1', fontsize=11, fontweight='bold')
+    ax2.set_ylabel('PC2', fontsize=11, fontweight='bold')
+    ax2.set_title('C Implementation', fontsize=13, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+    ax2.legend(loc='best')
+    
+    # Dibujar líneas conectoras entre puntos correspondientes
+    # Usar subset para legibilidad
+    n_lines = min(len(X_sklearn), 100)  # Máximo 100 líneas
+    line_indices = np.linspace(0, len(X_sklearn)-1, n_lines, dtype=int)
+    
+    for i in line_indices:
+        # Calcular diferencia para colorear línea
+        diff_magnitude = np.sqrt(np.sum((X_c[i] - X_sklearn[i])**2))
+        
+        # Color: Verde (baja diferencia) a Rojo (alta diferencia)
+        if diff_magnitude < np.percentile(magnitudes, 33):
+            color = 'green'
+            alpha = 0.3
+        elif diff_magnitude < np.percentile(magnitudes, 67):
+            color = 'orange'
+            alpha = 0.4
+        else:
+            color = 'red'
+            alpha = 0.5
+        
+        # Crear línea conectora usando transform
+        # Normalizar coordenadas a espacio de la figura
+        trans_fig = fig.transFigure
+        
+        # Coordenadas en el primer subplot
+        coord1 = ax1.transData.transform([X_sklearn[i, 0], X_sklearn[i, 1]])
+        # Coordenadas en el segundo subplot
+        coord2 = ax2.transData.transform([X_c[i, 0], X_c[i, 1]])
+        
+        # Convertir a coordenadas de figura
+        coord1_fig = trans_fig.inverted().transform(coord1)
+        coord2_fig = trans_fig.inverted().transform(coord2)
+        
+        # Dibujar línea
+        line = plt.Line2D([coord1_fig[0], coord2_fig[0]], 
+                         [coord1_fig[1], coord2_fig[1]],
+                         transform=fig.transFigure, color=color, 
+                         alpha=alpha, linewidth=1, zorder=1)
+        fig.add_artist(line)
+    
+    # Leyenda de colores de líneas
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], color='green', lw=2, label='Diferencia baja (<33%)'),
+        Line2D([0], [0], color='orange', lw=2, label='Diferencia media (33-67%)'),
+        Line2D([0], [0], color='red', lw=2, label='Diferencia alta (>67%)')
+    ]
+    fig.legend(handles=legend_elements, loc='upper center', 
+              ncol=3, framealpha=0.9, bbox_to_anchor=(0.5, 0.98))
+    
+    fig.suptitle('Comparación Lado a Lado con Líneas Conectoras\n' +
+                'Líneas conectan puntos correspondientes (mismo índice)',
+                fontsize=15, fontweight='bold', y=0.92)
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.90])
+    plt.savefig(output_path / 'pca_connected_scatter.png', dpi=300, bbox_inches='tight')
+    print(f"✓ Connected scatter guardado")
+    plt.close()
+    
+    # 6. NUEVO: Contour Overlap con Error Ellipses
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    # Colores por clase
+    colors = plt.cm.Set1(np.linspace(0, 1, len(np.unique(y))))
+    
+    # Graficar contornos para sklearn y C por clase
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        
+        if np.sum(mask) > 3:
+            # sklearn: contornos azulados
+            try:
+                from scipy.stats import gaussian_kde
+                xy_sklearn = np.vstack([X_sklearn[mask, 0], X_sklearn[mask, 1]])
+                kde_sklearn = gaussian_kde(xy_sklearn)
+                
+                # Grid
+                x_min = min(X_sklearn[:, 0].min(), X_c[:, 0].min()) - 2
+                x_max = max(X_sklearn[:, 0].max(), X_c[:, 0].max()) + 2
+                y_min = min(X_sklearn[:, 1].min(), X_c[:, 1].min()) - 2
+                y_max = max(X_sklearn[:, 1].max(), X_c[:, 1].max()) + 2
+                
+                xx, yy = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+                positions = np.vstack([xx.ravel(), yy.ravel()])
+                z_sklearn = np.reshape(kde_sklearn(positions).T, xx.shape)
+                
+                # Contornos sklearn (azul)
+                ax.contour(xx, yy, z_sklearn, levels=5, 
+                          colors=['blue'], alpha=0.6, linewidths=2,
+                          linestyles='solid')
+                
+                # C: contornos rojizos
+                xy_c = np.vstack([X_c[mask, 0], X_c[mask, 1]])
+                kde_c = gaussian_kde(xy_c)
+                z_c = np.reshape(kde_c(positions).T, xx.shape)
+                
+                ax.contour(xx, yy, z_c, levels=5,
+                          colors=['red'], alpha=0.6, linewidths=2,
+                          linestyles='dashed')
+                
+            except:
+                pass
+    
+    # Agregar elipses de error para cada punto
+    from matplotlib.patches import Ellipse
+    
+    # Calcular elipses basadas en diferencias
+    for i in range(0, len(X_sklearn), 10):  # Cada 10 puntos para no saturar
+        diff = X_c[i] - X_sklearn[i]
+        magnitude = np.sqrt(np.sum(diff**2))
+        
+        # Centro en sklearn
+        center = X_sklearn[i]
+        
+        # Radio proporcional a magnitud de error
+        width = max(magnitude * 2, 0.1)
+        height = max(magnitude * 2, 0.1)
+        
+        # Color según magnitud
+        if magnitude < np.percentile(magnitudes, 33):
+            color = 'green'
+            alpha = 0.1
+        elif magnitude < np.percentile(magnitudes, 67):
+            color = 'yellow'
+            alpha = 0.15
+        else:
+            color = 'red'
+            alpha = 0.2
+        
+        ellipse = Ellipse(center, width, height, 
+                         facecolor=color, edgecolor=color,
+                         alpha=alpha, linewidth=1)
+        ax.add_patch(ellipse)
+    
+    # Puntos sklearn (base)
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1],
+                  c=[colors[idx]], alpha=0.5, s=50,
+                  edgecolors='blue', linewidths=1.5,
+                  marker='o', label=f'sklearn Clase {int(class_label)}')
+    
+    # Puntos C (x) - Mayor opacidad y tamaño para visibilidad
+    for idx, class_label in enumerate(np.unique(y)):
+        mask = y == class_label
+        ax.scatter(X_c[mask, 0], X_c[mask, 1],
+                  c=[colors[idx]], alpha=1.0, s=60,
+                  edgecolors='red', linewidths=2.0,
+                  marker='x', label=f'C Clase {int(class_label)}')
+    
+    ax.set_xlabel('PC1', fontsize=12, fontweight='bold')
+    ax.set_ylabel('PC2', fontsize=12, fontweight='bold')
+    ax.set_title('Superposición de Contornos + Elipses de Error\n' +
+                'sklearn (azul sólido) | C (rojo punteado) | Componentes ajustados automáticamente',
+                fontsize=14, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.2, linestyle='--')
+    ax.legend(loc='best', framealpha=0.9, fontsize=8, ncol=2)
+    
+    # Estadísticas
+    overlap_score = 1.0 - (magnitudes.mean() / magnitudes.max()) if magnitudes.max() > 0 else 1.0
+    textstr = (f'✓ Componentes alineados por correlación\n'
+              f'Coincidencia de contornos: ~{overlap_score*100:.1f}%\n'
+              f'MSE: {magnitudes.mean():.2e}\n'
+              f'Elipses: Verde (bajo) | Amarillo (medio) | Rojo (alto)')
+    props = dict(boxstyle='round', facecolor='lightgreen', alpha=0.85, edgecolor='darkgreen', linewidth=2)
+    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
+            verticalalignment='top', bbox=props, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig(output_path / 'pca_contour_overlap.png', dpi=300, bbox_inches='tight')
+    print(f"✓ Contour overlap guardado")
+    plt.close()
+    
+    # 7. Scatter plots por componente
     n_components = X_c.shape[1]
     fig, axes = plt.subplots(1, n_components, figsize=(8*n_components, 6))
     
@@ -308,7 +695,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir='../report/comparison_plots')
     print(f"✓ Difference distribution guardado")
     plt.close()
     
-    # 5. Boxplot de errores absolutos
+    # 6. Boxplot de errores absolutos
     fig, ax = plt.subplots(figsize=(10, 6))
     
     errors = []
@@ -327,11 +714,18 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir='../report/comparison_plots')
     print(f"✓ Error boxplot guardado")
     plt.close()
     
-    print(f"\n✓ Todas las gráficas guardadas en: {output_path}")
+    print(f"\n{'='*70}")
+    print(f"✓ 9 GRÁFICAS COMPARATIVAS GENERADAS EXITOSAMENTE")
+    print(f"{'='*70}")
+    print(f"Guardadas en: {output_path}\n")
+    print(f"  Básicas (3):     scatter, overlay, kde_overlay")
+    print(f"  Avanzadas (3):   vector_field, connected_scatter, contour_overlap")
+    print(f"  Análisis (3):    component_correlation, difference_dist, error_boxplot")
+    print(f"{'='*70}\n")
 
 
 def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations, 
-                   output_dir='../report'):
+                   output_dir=None):
     """
     Genera un reporte completo de la comparación.
     """
@@ -339,7 +733,10 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
     print("GENERANDO REPORTE FINAL")
     print("=" * 70)
     
-    output_path = Path(output_dir)
+    if output_dir is None:
+        output_path = REPORT_DIR
+    else:
+        output_path = Path(output_dir).resolve()
     
     with open(output_path / 'validation_report.txt', 'w', encoding='utf-8') as f:
         f.write("=" * 70 + "\n")
@@ -393,12 +790,20 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
         
         f.write("ARCHIVOS GENERADOS\n")
         f.write("-" * 70 + "\n")
+        f.write("Comparaciones Básicas:\n")
         f.write("  - numerical_comparison.txt: Métricas numéricas detalladas\n")
         f.write("  - pca_comparison_scatter.png: Comparación lado a lado\n")
         f.write("  - pca_overlay.png: Superposición de resultados\n")
+        f.write("  - pca_kde_overlay.png: Comparación con densidad KDE\n")
+        f.write("\nComparaciones Visuales Avanzadas (NUEVAS):\n")
+        f.write("  - pca_vector_field.png: Campo vectorial de diferencias\n")
+        f.write("  - pca_connected_scatter.png: Scatter con líneas conectoras\n")
+        f.write("  - pca_contour_overlap.png: Contornos superpuestos + elipses\n")
+        f.write("\nAnálisis de Concordancia:\n")
         f.write("  - pca_component_correlation.png: Correlación por componente\n")
         f.write("  - pca_difference_distribution.png: Distribución de diferencias\n")
         f.write("  - pca_error_boxplot.png: Boxplot de errores\n")
+        f.write("\nTotal: 9 gráficas comparativas generadas\n")
         f.write("\n")
     
     print(f"✓ Reporte final guardado en: {output_path / 'validation_report.txt'}")

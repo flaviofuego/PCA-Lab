@@ -11,6 +11,11 @@ SRC_DIR = src
 REPORT_DIR = report
 CURRENT_DIR = $(shell cd)
 
+# Parámetros de datos (configurables)
+SAMPLES ?= 1000
+FEATURES ?= 15
+N_COMPONENTS ?= 2
+
 # Colores para output (Windows PowerShell)
 BLUE = [94m
 GREEN = [92m
@@ -50,7 +55,7 @@ generate-data:
 	@echo "  Generando datos sintéticos..."
 	@echo "======================================"
 	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
-	python $(PYTHON_DIR)/generate_data.py --samples 500 --features 10
+	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES)
 	@echo ""
 	@echo "Datos generados exitosamente"
 

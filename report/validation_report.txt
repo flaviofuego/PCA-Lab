@@ -9,17 +9,17 @@ implementación de referencia de scikit-learn.
 
 DATOS
 ----------------------------------------------------------------------
-Dimensiones originales:  500 muestras x 10 características
-Dimensiones reducidas:   500 muestras x 2 componentes
-Reducción dimensional:   80.0%
+Dimensiones originales:  20 muestras x 5 características
+Dimensiones reducidas:   20 muestras x 2 componentes
+Reducción dimensional:   60.0%
 Número de clases:        2
 
 VARIANZA EXPLICADA
 ----------------------------------------------------------------------
 sklearn:
-  PC1: 50.14%
-  PC2: 16.20%
-  Total: 66.34%
+  PC1: 60.93%
+  PC2: 26.01%
+  Total: 86.94%
 
 VALIDACIÓN
 ----------------------------------------------------------------------
@@ -42,10 +42,21 @@ prácticamente idénticos a sklearn.
 
 ARCHIVOS GENERADOS
 ----------------------------------------------------------------------
+Comparaciones Básicas:
   - numerical_comparison.txt: Métricas numéricas detalladas
   - pca_comparison_scatter.png: Comparación lado a lado
   - pca_overlay.png: Superposición de resultados
+  - pca_kde_overlay.png: Comparación con densidad KDE
+
+Comparaciones Visuales Avanzadas (NUEVAS):
+  - pca_vector_field.png: Campo vectorial de diferencias
+  - pca_connected_scatter.png: Scatter con líneas conectoras
+  - pca_contour_overlap.png: Contornos superpuestos + elipses
+
+Análisis de Concordancia:
   - pca_component_correlation.png: Correlación por componente
   - pca_difference_distribution.png: Distribución de diferencias
   - pca_error_boxplot.png: Boxplot de errores
+
+Total: 9 gráficas comparativas generadas
 

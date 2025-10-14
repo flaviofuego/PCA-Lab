@@ -2,53 +2,33 @@
 ESTADÍSTICAS DE LOS DATOS GENERADOS
 ============================================================
 
-Número de muestras (N): 500
-Número de dimensiones (M): 10
+Número de muestras (N): 20
+Número de dimensiones (M): 5
 
 Media por dimensión:
-  Dim 0: 4.862287
-  Dim 1: 2.495239
-  Dim 2: -2.225920
-  Dim 3: 3.372146
-  Dim 4: -2.798274
-  Dim 5: -2.574254
-  Dim 6: -5.211583
-  Dim 7: -2.980832
-  Dim 8: -2.900173
-  Dim 9: -0.259738
+  Dim 0: -4.946475
+  Dim 1: -3.095085
+  Dim 2: -3.024275
+  Dim 3: 5.013816
+  Dim 4: 2.913050
 
 Desviación estándar por dimensión:
-  Dim 0: 1.122467
-  Dim 1: 1.777409
-  Dim 2: 3.699257
-  Dim 3: 4.906233
-  Dim 4: 1.682315
-  Dim 5: 2.075295
-  Dim 6: 2.869361
-  Dim 7: 2.250097
-  Dim 8: 3.250666
-  Dim 9: 1.015242
+  Dim 0: 0.955003
+  Dim 1: 1.109121
+  Dim 2: 1.916336
+  Dim 3: 0.752389
+  Dim 4: 1.130504
 
 Valor mínimo por dimensión:
-  Dim 0: 1.110810
-  Dim 1: -2.193250
-  Dim 2: -12.469459
-  Dim 3: -13.344687
-  Dim 4: -7.242858
-  Dim 5: -8.645345
-  Dim 6: -13.231398
-  Dim 7: -11.363087
-  Dim 8: -12.758718
-  Dim 9: -4.472438
+  Dim 0: -6.811097
+  Dim 1: -5.621305
+  Dim 2: -7.248986
+  Dim 3: 3.891730
+  Dim 4: 1.047043
 
 Valor máximo por dimensión:
-  Dim 0: 8.487818
-  Dim 1: 7.623794
-  Dim 2: 11.203325
-  Dim 3: 20.563352
-  Dim 4: 2.675045
-  Dim 5: 4.501842
-  Dim 6: 5.122403
-  Dim 7: 4.865960
-  Dim 8: 7.684390
-  Dim 9: 2.820589
+  Dim 0: -3.041922
+  Dim 1: -1.546146
+  Dim 2: 0.099294
+  Dim 3: 7.025050
+  Dim 4: 4.691466
