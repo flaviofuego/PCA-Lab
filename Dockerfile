@@ -11,8 +11,6 @@ LABEL description="Entorno para compilar y ejecutar PCA en C"
 RUN apt-get update && apt-get install -y \
     make \
     cmake \
-    liblapack-dev \
-    libblas-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear directorio de trabajo
@@ -24,6 +22,12 @@ COPY src/ ./src/
 # Crear directorio para datos
 RUN mkdir -p /app/data
 
-# Comando de compilación
-# Se compilará cuando se ejecute el contenedor para permitir cambios en el código
-CMD ["sh", "-c", "gcc -o /app/pca_program /app/src/*.c -lm -O2 && /app/pca_program"]
+# Comando de compilación y ejecución
+# Compila los archivos C y ejecuta el programa PCA
+CMD ["sh", "-c", "echo '========================================' && \
+     echo 'Compiling PCA program...' && \
+     echo '========================================' && \
+     gcc -o /app/pca_program /app/src/main.c /app/src/pca.c -lm -O2 -Wall && \
+     echo 'Compilation successful!' && \
+     echo '' && \
+     /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2"]

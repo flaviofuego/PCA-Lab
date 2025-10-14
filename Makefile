@@ -68,9 +68,29 @@ run:
 	@echo "  Ejecutando PCA en C (Docker)..."
 	@echo "======================================"
 	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
+	@echo "Montando volumenes y ejecutando contenedor..."
 	docker run --rm -v "%cd%/$(DATA_DIR):/app/data" -v "%cd%/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
 	@echo ""
-	@echo "PCA ejecutado. Resultados en $(DATA_DIR)/output_data.csv"
+	@echo "======================================"
+	@echo "  PCA ejecutado exitosamente!"
+	@echo "======================================"
+	@echo "Resultados guardados en: $(DATA_DIR)/output_data.csv"
+	@echo ""
+
+# Compilar localmente (sin Docker) - requiere GCC instalado
+compile-local:
+	@echo "======================================"
+	@echo "  Compilando PCA localmente..."
+	@echo "======================================"
+	gcc -o pca_program $(SRC_DIR)/main.c $(SRC_DIR)/pca.c -lm -O2 -Wall
+	@echo "Compilacion exitosa: pca_program.exe"
+
+# Ejecutar localmente (despues de compile-local)
+run-local:
+	@echo "======================================"
+	@echo "  Ejecutando PCA localmente..."
+	@echo "======================================"
+	./pca_program $(DATA_DIR)/input_data.csv $(DATA_DIR)/output_data.csv 2
 
 # Validar resultados
 validate:
