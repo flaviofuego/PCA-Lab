@@ -48,9 +48,8 @@ Comparaciones Básicas:
   - pca_overlay.png: Superposición de resultados
   - pca_kde_overlay.png: Comparación con densidad KDE
 
-Comparaciones Visuales Avanzadas (NUEVAS):
+Comparaciones Visuales Avanzadas:
   - pca_vector_field.png: Campo vectorial de diferencias
-  - pca_connected_scatter.png: Scatter con líneas conectoras
   - pca_contour_overlap.png: Contornos superpuestos + elipses
 
 Análisis de Concordancia:
@@ -58,5 +57,5 @@ Análisis de Concordancia:
   - pca_difference_distribution.png: Distribución de diferencias
   - pca_error_boxplot.png: Boxplot de errores
 
-Total: 9 gráficas comparativas generadas
+Total: 8 gráficas comparativas generadas
 

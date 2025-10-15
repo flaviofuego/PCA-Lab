@@ -12,8 +12,9 @@ Implementación completa del algoritmo **PCA (Principal Component Analysis)** en
 ```
 ✅ Correlación PC1: 1.000000 (perfecta)
 ✅ Correlación PC2: 1.000000 (perfecta)  
-✅ MSE: 3.327e-11
-✅ MAE: 3.429e-06
+✅ MSE: 7.343e-10
+✅ MAE: 2.224e-05
+✅ Ajuste automático: PC1 invertido
 ✅ Calificación: A+ (EXCELENTE)
 ```
 
@@ -33,6 +34,13 @@ make setup
 
 # 2. Todo en uno: genera + compila + ejecuta + valida
 make all-steps
+
+# 3. Manual Custom
+make generate-data SAMPLES=20 FEATURES=5
+make build
+make run
+make validate
+
 ```
 
 Ver resultados en `report/validation_report.txt`
@@ -124,7 +132,7 @@ make validate
 **Genera:**
 - `report/validation_report.txt`
 - `report/numerical_comparison.txt`
-- 5 gráficas comparativas
+- 8 gráficas comparativas (básicas, avanzadas y análisis)
 
 ---
 
@@ -181,25 +189,33 @@ typedef struct {
 ### Validación:
 ```
 Métricas (C vs sklearn):
-  MSE:              3.327e-11
-  MAE:              3.429e-06
-  Diferencia máx:   2.903e-05
+  MSE:              7.343e-10
+  MAE:              2.224e-05
+  Diferencia máx:   7.216e-05
   Correlación PC1:  1.000000
   Correlación PC2:  1.000000
+  Ajuste auto:      PC1 invertido
 
 Estado: EXCELENTE ✓
 ```
 
-### Visualizaciones (9 gráficas):
+### Visualizaciones (12 gráficas):
 **Exploración (4):**
 - Distribuciones de características
 - Matriz de correlación
 - Scatter matrix 10×10
 - Scatter 3D
 
-**Comparación (5):**
+**Comparación Básica (3):**
 - Scatter lado a lado (C vs sklearn)
 - Overlay (superposición)
+- KDE density overlay
+
+**Comparación Avanzada (2):**
+- Vector field (campo de diferencias)
+- Contour overlap + elipses de error
+
+**Análisis de Concordancia (3):**
 - Correlación por componente
 - Distribución de diferencias
 - Boxplot de errores
@@ -273,7 +289,8 @@ make generate-data  # Genera datos primero
   - [x] Proyección a K dimensiones
   - [x] Escritura CSV (N×K)
 - [x] Comparación numérica con sklearn
-- [x] Comparación gráfica (5 plots)
+- [x] Comparación gráfica (8 plots avanzados)
+- [x] Detección automática de inversión de componentes
 - [x] Docker + Makefile
 
 **Estado: ✅ COMPLETADO (100%)**

@@ -435,100 +435,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     print(f"✓ Vector field guardado")
     plt.close()
     
-    # 5. NUEVO: Side-by-Side con Líneas Conectoras
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
-    
-    # Colores por clase
-    colors_class = plt.cm.Set1(np.linspace(0, 1, len(np.unique(y))))
-    
-    # Subplot 1: sklearn
-    for idx, class_label in enumerate(np.unique(y)):
-        mask = y == class_label
-        ax1.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1],
-                   c=[colors_class[idx]], alpha=0.7, s=60,
-                   edgecolors='black', linewidths=0.5,
-                   label=f'Clase {int(class_label)}')
-    
-    ax1.set_xlabel('PC1', fontsize=11, fontweight='bold')
-    ax1.set_ylabel('PC2', fontsize=11, fontweight='bold')
-    ax1.set_title('sklearn PCA', fontsize=13, fontweight='bold')
-    ax1.grid(True, alpha=0.3)
-    ax1.legend(loc='best')
-    
-    # Subplot 2: C implementation
-    for idx, class_label in enumerate(np.unique(y)):
-        mask = y == class_label
-        ax2.scatter(X_c[mask, 0], X_c[mask, 1],
-                   c=[colors_class[idx]], alpha=0.7, s=60,
-                   edgecolors='black', linewidths=0.5,
-                   label=f'Clase {int(class_label)}')
-    
-    ax2.set_xlabel('PC1', fontsize=11, fontweight='bold')
-    ax2.set_ylabel('PC2', fontsize=11, fontweight='bold')
-    ax2.set_title('C Implementation', fontsize=13, fontweight='bold')
-    ax2.grid(True, alpha=0.3)
-    ax2.legend(loc='best')
-    
-    # Dibujar líneas conectoras entre puntos correspondientes
-    # Usar subset para legibilidad
-    n_lines = min(len(X_sklearn), 100)  # Máximo 100 líneas
-    line_indices = np.linspace(0, len(X_sklearn)-1, n_lines, dtype=int)
-    
-    for i in line_indices:
-        # Calcular diferencia para colorear línea
-        diff_magnitude = np.sqrt(np.sum((X_c[i] - X_sklearn[i])**2))
-        
-        # Color: Verde (baja diferencia) a Rojo (alta diferencia)
-        if diff_magnitude < np.percentile(magnitudes, 33):
-            color = 'green'
-            alpha = 0.3
-        elif diff_magnitude < np.percentile(magnitudes, 67):
-            color = 'orange'
-            alpha = 0.4
-        else:
-            color = 'red'
-            alpha = 0.5
-        
-        # Crear línea conectora usando transform
-        # Normalizar coordenadas a espacio de la figura
-        trans_fig = fig.transFigure
-        
-        # Coordenadas en el primer subplot
-        coord1 = ax1.transData.transform([X_sklearn[i, 0], X_sklearn[i, 1]])
-        # Coordenadas en el segundo subplot
-        coord2 = ax2.transData.transform([X_c[i, 0], X_c[i, 1]])
-        
-        # Convertir a coordenadas de figura
-        coord1_fig = trans_fig.inverted().transform(coord1)
-        coord2_fig = trans_fig.inverted().transform(coord2)
-        
-        # Dibujar línea
-        line = plt.Line2D([coord1_fig[0], coord2_fig[0]], 
-                         [coord1_fig[1], coord2_fig[1]],
-                         transform=fig.transFigure, color=color, 
-                         alpha=alpha, linewidth=1, zorder=1)
-        fig.add_artist(line)
-    
-    # Leyenda de colores de líneas
-    from matplotlib.lines import Line2D
-    legend_elements = [
-        Line2D([0], [0], color='green', lw=2, label='Diferencia baja (<33%)'),
-        Line2D([0], [0], color='orange', lw=2, label='Diferencia media (33-67%)'),
-        Line2D([0], [0], color='red', lw=2, label='Diferencia alta (>67%)')
-    ]
-    fig.legend(handles=legend_elements, loc='upper center', 
-              ncol=3, framealpha=0.9, bbox_to_anchor=(0.5, 0.98))
-    
-    fig.suptitle('Comparación Lado a Lado con Líneas Conectoras\n' +
-                'Líneas conectan puntos correspondientes (mismo índice)',
-                fontsize=15, fontweight='bold', y=0.92)
-    
-    plt.tight_layout(rect=[0, 0, 1, 0.90])
-    plt.savefig(output_path / 'pca_connected_scatter.png', dpi=300, bbox_inches='tight')
-    print(f"✓ Connected scatter guardado")
-    plt.close()
-    
-    # 6. NUEVO: Contour Overlap con Error Ellipses
+    # 5. NUEVO: Contour Overlap con Error Ellipses
     fig, ax = plt.subplots(figsize=(14, 12))
     
     # Colores por clase
@@ -715,11 +622,11 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     plt.close()
     
     print(f"\n{'='*70}")
-    print(f"✓ 9 GRÁFICAS COMPARATIVAS GENERADAS EXITOSAMENTE")
+    print(f"✓ 8 GRÁFICAS COMPARATIVAS GENERADAS EXITOSAMENTE")
     print(f"{'='*70}")
     print(f"Guardadas en: {output_path}\n")
     print(f"  Básicas (3):     scatter, overlay, kde_overlay")
-    print(f"  Avanzadas (3):   vector_field, connected_scatter, contour_overlap")
+    print(f"  Avanzadas (2):   vector_field, contour_overlap")
     print(f"  Análisis (3):    component_correlation, difference_dist, error_boxplot")
     print(f"{'='*70}\n")
 
@@ -795,15 +702,14 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
         f.write("  - pca_comparison_scatter.png: Comparación lado a lado\n")
         f.write("  - pca_overlay.png: Superposición de resultados\n")
         f.write("  - pca_kde_overlay.png: Comparación con densidad KDE\n")
-        f.write("\nComparaciones Visuales Avanzadas (NUEVAS):\n")
+        f.write("\nComparaciones Visuales Avanzadas:\n")
         f.write("  - pca_vector_field.png: Campo vectorial de diferencias\n")
-        f.write("  - pca_connected_scatter.png: Scatter con líneas conectoras\n")
         f.write("  - pca_contour_overlap.png: Contornos superpuestos + elipses\n")
         f.write("\nAnálisis de Concordancia:\n")
         f.write("  - pca_component_correlation.png: Correlación por componente\n")
         f.write("  - pca_difference_distribution.png: Distribución de diferencias\n")
         f.write("  - pca_error_boxplot.png: Boxplot de errores\n")
-        f.write("\nTotal: 9 gráficas comparativas generadas\n")
+        f.write("\nTotal: 8 gráficas comparativas generadas\n")
         f.write("\n")
     
     print(f"✓ Reporte final guardado en: {output_path / 'validation_report.txt'}")
