@@ -2,24 +2,19 @@
 REPORTE DE VALIDACIÓN - IMPLEMENTACIÓN PCA EN C
 ======================================================================
 
-RESUMEN EJECUTIVO
-----------------------------------------------------------------------
-Este reporte compara la implementación de PCA en C con la
-implementación de referencia de scikit-learn.
-
 DATOS
 ----------------------------------------------------------------------
-Dimensiones originales:  20 muestras x 5 características
-Dimensiones reducidas:   20 muestras x 2 componentes
-Reducción dimensional:   60.0%
+Dimensiones originales:  10000 muestras x 17 características
+Dimensiones reducidas:   10000 muestras x 2 componentes
+Reducción dimensional:   88.2%
 Número de clases:        2
 
 VARIANZA EXPLICADA
 ----------------------------------------------------------------------
 sklearn:
-  PC1: 60.93%
-  PC2: 26.01%
-  Total: 86.94%
+  PC1: 30.15%
+  PC2: 20.07%
+  Total: 50.22%
 
 VALIDACIÓN
 ----------------------------------------------------------------------
@@ -46,16 +41,13 @@ Comparaciones Básicas:
   - numerical_comparison.txt: Métricas numéricas detalladas
   - pca_comparison_scatter.png: Comparación lado a lado
   - pca_overlay.png: Superposición de resultados
-  - pca_kde_overlay.png: Comparación con densidad KDE
 
 Comparaciones Visuales Avanzadas:
-  - pca_vector_field.png: Campo vectorial de diferencias
   - pca_contour_overlap.png: Contornos superpuestos + elipses
 
 Análisis de Concordancia:
   - pca_component_correlation.png: Correlación por componente
   - pca_difference_distribution.png: Distribución de diferencias
-  - pca_error_boxplot.png: Boxplot de errores
 
 Total: 8 gráficas comparativas generadas
 
