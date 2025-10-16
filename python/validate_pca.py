@@ -257,184 +257,6 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     print(f"✓ Scatter comparison guardado")
     plt.close()
     
-    # 2. Superposición de ambos resultados
-    fig, ax = plt.subplots(figsize=(12, 10))
-    
-    ax.scatter(X_c[:, 0], X_c[:, 1], alpha=0.4, s=40, c='blue', 
-              label='C implementation', marker='o')
-    ax.scatter(X_sklearn[:, 0], X_sklearn[:, 1], alpha=0.4, s=40, c='red', 
-              label='sklearn', marker='x')
-    
-    ax.set_xlabel('PC1')
-    ax.set_ylabel('PC2')
-    ax.set_title('Superposición: PCA en C vs sklearn')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    plt.savefig(output_path / 'pca_overlay.png', dpi=300, bbox_inches='tight')
-    print(f"✓ Overlay plot guardado")
-    plt.close()
-    
-    # 3. NUEVO: Comparación con contornos de densidad (KDE)
-    fig, ax = plt.subplots(figsize=(14, 12))
-    
-    # Crear una paleta de colores para las clases
-    colors = plt.cm.Set1(np.linspace(0, 1, len(np.unique(y))))
-    
-    # Graficar sklearn con contornos de densidad (sombreado)
-    for idx, class_label in enumerate(np.unique(y)):
-        mask = y == class_label
-        
-        # sklearn: Contornos de densidad KDE con relleno
-        try:
-            from scipy.stats import gaussian_kde
-            
-            # Calcular KDE para sklearn
-            if np.sum(mask) > 3:  # Necesitamos al menos 3 puntos para KDE
-                xy_sklearn = np.vstack([X_sklearn[mask, 0], X_sklearn[mask, 1]])
-                kde_sklearn = gaussian_kde(xy_sklearn)
-                
-                # Crear grid para evaluar KDE
-                x_min = min(X_sklearn[:, 0].min(), X_c[:, 0].min()) - 1
-                x_max = max(X_sklearn[:, 0].max(), X_c[:, 0].max()) + 1
-                y_min = min(X_sklearn[:, 1].min(), X_c[:, 1].min()) - 1
-                y_max = max(X_sklearn[:, 1].max(), X_c[:, 1].max()) + 1
-                
-                xx, yy = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
-                positions = np.vstack([xx.ravel(), yy.ravel()])
-                
-                # Evaluar KDE
-                z_sklearn = np.reshape(kde_sklearn(positions).T, xx.shape)
-                
-                # Dibujar contornos rellenos (sombreado) para sklearn
-                contour_sklearn = ax.contourf(xx, yy, z_sklearn, levels=8, 
-                                             colors=[colors[idx]], alpha=0.25, 
-                                             antialiased=True)
-                # Contornos de línea para mayor claridad
-                ax.contour(xx, yy, z_sklearn, levels=8, colors=[colors[idx]], 
-                          alpha=0.4, linewidths=1, linestyles='dashed')
-                
-        except ImportError:
-            # Si no hay scipy, usar scatter con alpha bajo
-            ax.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1], 
-                      alpha=0.15, s=100, c=[colors[idx]], 
-                      edgecolors='none')
-    
-    # Graficar C implementation con puntos sólidos encima
-    for idx, class_label in enumerate(np.unique(y)):
-        mask = y == class_label
-        ax.scatter(X_c[mask, 0], X_c[mask, 1], 
-                  alpha=0.8, s=25, c=[colors[idx]], 
-                  edgecolors='black', linewidths=0.5,
-                  label=f'Clase {int(class_label)} (C impl.)',
-                  marker='o')
-    
-    # Leyenda personalizada
-    from matplotlib.patches import Patch
-    from matplotlib.lines import Line2D
-    
-    legend_elements = [
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', 
-               markersize=8, markeredgecolor='black', markeredgewidth=0.5,
-               label='Implementación C (puntos)', linestyle='None'),
-        Patch(facecolor='gray', alpha=0.25, label='sklearn (densidad KDE)')
-    ]
-    
-    # Agregar elementos de clase
-    for idx, class_label in enumerate(np.unique(y)):
-        legend_elements.append(
-            Line2D([0], [0], marker='o', color='w', 
-                   markerfacecolor=colors[idx], markersize=8,
-                   label=f'Clase {int(class_label)}', linestyle='None')
-        )
-    
-    ax.legend(handles=legend_elements, loc='best', framealpha=0.9)
-    
-    ax.set_xlabel('PC1', fontsize=12, fontweight='bold')
-    ax.set_ylabel('PC2', fontsize=12, fontweight='bold')
-    ax.set_title('Comparación con Densidad KDE: C (puntos) vs sklearn (sombreado)', 
-                fontsize=14, fontweight='bold', pad=20)
-    ax.grid(True, alpha=0.2, linestyle='--')
-    
-    # Añadir anotación explicativa
-    textstr = ('sklearn: Áreas sombreadas (densidad KDE)\n'
-              'C implementation: Puntos sólidos\n'
-              'Coincidencia perfecta: puntos dentro del área')
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
-            verticalalignment='top', bbox=props)
-    
-    plt.tight_layout()
-    plt.savefig(output_path / 'pca_kde_overlay.png', dpi=300, bbox_inches='tight')
-    print(f"✓ KDE density overlay guardado")
-    plt.close()
-    
-    # 4. NUEVO: Campo Vectorial de Diferencias (Vector Field)
-    fig, ax = plt.subplots(figsize=(14, 12))
-    
-    # Calcular diferencias (vectores)
-    diff_vectors = X_c - X_sklearn
-    magnitudes = np.sqrt(np.sum(diff_vectors**2, axis=1))
-    
-    # Normalizar colores por magnitud de error
-    norm = plt.Normalize(vmin=magnitudes.min(), vmax=magnitudes.max())
-    cmap = plt.cm.RdYlGn_r  # Rojo = alto error, Verde = bajo error
-    
-    # Graficar puntos sklearn como base
-    for idx, class_label in enumerate(np.unique(y)):
-        mask = y == class_label
-        ax.scatter(X_sklearn[mask, 0], X_sklearn[mask, 1], 
-                  alpha=0.6, s=80, c='lightblue',
-                  edgecolors='blue', linewidths=1.5,
-                  label=f'Clase {int(class_label)} (sklearn base)',
-                  marker='o', zorder=2)
-    
-    # Graficar flechas (vectores de diferencia)
-    # Usar subset para no saturar (si hay muchos puntos)
-    n_arrows = min(len(X_sklearn), 200)  # Máximo 200 flechas
-    indices = np.random.choice(len(X_sklearn), n_arrows, replace=False)
-    
-    for i in indices:
-        color = cmap(norm(magnitudes[i]))
-        ax.arrow(X_sklearn[i, 0], X_sklearn[i, 1],
-                diff_vectors[i, 0], diff_vectors[i, 1],
-                head_width=0.3, head_length=0.2,
-                fc=color, ec=color, alpha=0.7,
-                length_includes_head=True, zorder=3)
-    
-    # Graficar puntos C como destino
-    scatter_c = ax.scatter(X_c[:, 0], X_c[:, 1], 
-                          c=magnitudes, cmap=cmap, norm=norm,
-                          s=50, edgecolors='black', linewidths=0.5,
-                          marker='x', alpha=0.8, zorder=4,
-                          label='C implementation (destino)')
-    
-    # Colorbar para magnitud de diferencias
-    cbar = plt.colorbar(scatter_c, ax=ax, label='Magnitud de Diferencia')
-    cbar.ax.tick_params(labelsize=10)
-    
-    ax.set_xlabel('PC1', fontsize=12, fontweight='bold')
-    ax.set_ylabel('PC2', fontsize=12, fontweight='bold')
-    ax.set_title('Campo Vectorial de Diferencias: sklearn → C\n' +
-                'Flechas muestran dirección y magnitud de diferencias',
-                fontsize=14, fontweight='bold', pad=20)
-    ax.grid(True, alpha=0.2, linestyle='--')
-    ax.legend(loc='best', framealpha=0.9)
-    
-    # Estadísticas
-    textstr = (f'Diferencia promedio: {magnitudes.mean():.2e}\n'
-              f'Diferencia máxima: {magnitudes.max():.2e}\n'
-              f'Diferencia mínima: {magnitudes.min():.2e}')
-    props = dict(boxstyle='round', facecolor='lightgray', alpha=0.8)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
-            verticalalignment='top', bbox=props)
-    
-    plt.tight_layout()
-    plt.savefig(output_path / 'pca_vector_field.png', dpi=300, bbox_inches='tight')
-    print(f"✓ Vector field guardado")
-    plt.close()
-    
     # 5. NUEVO: Contour Overlap con Error Ellipses
     fig, ax = plt.subplots(figsize=(14, 12))
     
@@ -481,6 +303,9 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     
     # Agregar elipses de error para cada punto
     from matplotlib.patches import Ellipse
+    
+    # Calcular magnitudes primero
+    magnitudes = np.sqrt(np.sum((X_c - X_sklearn)**2, axis=1))
     
     # Calcular elipses basadas en diferencias
     for i in range(0, len(X_sklearn), 10):  # Cada 10 puntos para no saturar
@@ -602,32 +427,10 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     print(f"✓ Difference distribution guardado")
     plt.close()
     
-    # 6. Boxplot de errores absolutos
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    errors = []
-    labels = []
-    for i in range(n_components):
-        errors.append(np.abs(X_sklearn[:, i] - X_c[:, i]))
-        labels.append(f'PC{i+1}')
-    
-    ax.boxplot(errors, labels=labels)
-    ax.set_ylabel('Error Absoluto')
-    ax.set_title('Distribución de Errores Absolutos por Componente')
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    plt.tight_layout()
-    plt.savefig(output_path / 'pca_error_boxplot.png', dpi=300, bbox_inches='tight')
-    print(f"✓ Error boxplot guardado")
-    plt.close()
-    
-    print(f"\n{'='*70}")
-    print(f"✓ 8 GRÁFICAS COMPARATIVAS GENERADAS EXITOSAMENTE")
-    print(f"{'='*70}")
     print(f"Guardadas en: {output_path}\n")
-    print(f"  Básicas (3):     scatter, overlay, kde_overlay")
-    print(f"  Avanzadas (2):   vector_field, contour_overlap")
-    print(f"  Análisis (3):    component_correlation, difference_dist, error_boxplot")
+    print(f"  Básicas (1):     scatter")
+    print(f"  Avanzadas (1):   contour_overlap")
+    print(f"  Análisis (2):    component_correlation, difference_dist")
     print(f"{'='*70}\n")
 
 
@@ -649,11 +452,6 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
         f.write("=" * 70 + "\n")
         f.write("REPORTE DE VALIDACIÓN - IMPLEMENTACIÓN PCA EN C\n")
         f.write("=" * 70 + "\n\n")
-        
-        f.write("RESUMEN EJECUTIVO\n")
-        f.write("-" * 70 + "\n")
-        f.write(f"Este reporte compara la implementación de PCA en C con la\n")
-        f.write(f"implementación de referencia de scikit-learn.\n\n")
         
         f.write("DATOS\n")
         f.write("-" * 70 + "\n")
@@ -701,14 +499,11 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
         f.write("  - numerical_comparison.txt: Métricas numéricas detalladas\n")
         f.write("  - pca_comparison_scatter.png: Comparación lado a lado\n")
         f.write("  - pca_overlay.png: Superposición de resultados\n")
-        f.write("  - pca_kde_overlay.png: Comparación con densidad KDE\n")
         f.write("\nComparaciones Visuales Avanzadas:\n")
-        f.write("  - pca_vector_field.png: Campo vectorial de diferencias\n")
         f.write("  - pca_contour_overlap.png: Contornos superpuestos + elipses\n")
         f.write("\nAnálisis de Concordancia:\n")
         f.write("  - pca_component_correlation.png: Correlación por componente\n")
         f.write("  - pca_difference_distribution.png: Distribución de diferencias\n")
-        f.write("  - pca_error_boxplot.png: Boxplot de errores\n")
         f.write("\nTotal: 8 gráficas comparativas generadas\n")
         f.write("\n")
     
