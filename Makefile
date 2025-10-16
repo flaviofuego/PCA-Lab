@@ -1,5 +1,5 @@
 # Makefile para el laboratorio de PCA
-# Sistema: Windows (PowerShell)
+# Sistema: Linux/Unix
 # Compilador: GCC via Docker
 
 # Variables
@@ -9,22 +9,19 @@ DATA_DIR = data
 PYTHON_DIR = python
 SRC_DIR = src
 REPORT_DIR = report
-CURRENT_DIR = $(shell cd)
+CURRENT_DIR = $(shell pwd)
 
 # Parámetros de datos (configurables)
-SAMPLES ?= 1000
-FEATURES ?= 15
+SAMPLES ?= 20
+FEATURES ?= 5
 N_COMPONENTS ?= 2
 
-# Colores para output (Windows PowerShell)
-BLUE = [94m
-GREEN = [92m
-RESET = [0m
+# Colores para output (Linux)
+BLUE = \033[94m
+GREEN = \033[92m
+RESET = \033[0m
 
 .PHONY: all help setup generate-data build run validate clean clean-all
-
-# Target por defecto
-all: help
 
 help:
 	@echo "======================================"
@@ -54,7 +51,6 @@ generate-data:
 	@echo "======================================"
 	@echo "  Generando datos sintéticos..."
 	@echo "======================================"
-	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
 	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES)
 	@echo ""
 	@echo "Datos generados exitosamente"
@@ -73,7 +69,6 @@ run:
 	@echo "======================================"
 	@echo "  Ejecutando PCA en C (Docker)..."
 	@echo "======================================"
-	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
 	@echo "Montando volumenes y ejecutando contenedor..."
 	docker run --rm -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
 	@echo ""
@@ -89,7 +84,7 @@ compile-local:
 	@echo "  Compilando PCA localmente..."
 	@echo "======================================"
 	gcc -o pca_program $(SRC_DIR)/main.c $(SRC_DIR)/pca.c -lm -O2 -Wall
-	@echo "Compilacion exitosa: pca_program.exe"
+	@echo "Compilacion exitosa: pca_program"
 
 # Ejecutar localmente (despues de compile-local)
 run-local:
@@ -103,8 +98,8 @@ validate:
 	@echo "======================================"
 	@echo "  Validando resultados..."
 	@echo "======================================"
-	@if not exist "$(REPORT_DIR)" mkdir "$(REPORT_DIR)"
-	@if not exist "$(REPORT_DIR)/comparison_plots" mkdir "$(REPORT_DIR)/comparison_plots"
+	@mkdir -p $(REPORT_DIR)
+	@mkdir -p $(REPORT_DIR)/comparison_plots
 	cd $(PYTHON_DIR) && python validate_pca.py
 	@echo ""
 	@echo "Validacion completada. Ver resultados en $(REPORT_DIR)/"
@@ -112,20 +107,21 @@ validate:
 # Limpiar archivos generados
 clean:
 	@echo "Limpiando archivos generados..."
-	@if exist "$(DATA_DIR)\*.csv" del /Q "$(DATA_DIR)\*.csv"
-	@if exist "$(DATA_DIR)\*.txt" del /Q "$(DATA_DIR)\*.txt"
-	@if exist "$(REPORT_DIR)\*.png" del /Q "$(REPORT_DIR)\*.png"
-	@if exist "$(REPORT_DIR)\*.txt" del /Q "$(REPORT_DIR)\*.txt"
-	@if exist "$(SRC_DIR)\*.o" del /Q "$(SRC_DIR)\*.o"
-	@if exist "$(SRC_DIR)\*.exe" del /Q "$(SRC_DIR)\*.exe"
-	@if exist "$(SRC_DIR)\pca_program" del /Q "$(SRC_DIR)\pca_program"
+	@rm -f $(DATA_DIR)/*.csv
+	@rm -f $(DATA_DIR)/*.txt
+	@rm -f $(REPORT_DIR)/*.png
+	@rm -f $(REPORT_DIR)/*.txt
+	@rm -f $(REPORT_DIR)/comparison_plots/*.png
+	@rm -f $(SRC_DIR)/*.o
+	@rm -f $(SRC_DIR)/*.exe
+	@rm -f $(SRC_DIR)/pca_program
 	@echo "Archivos limpiados"
 
 # Limpiar todo incluyendo Docker
 clean-all: clean
 	@echo "Eliminando contenedores e imagenes Docker..."
-	-docker rm -f $(DOCKER_CONTAINER) 2>nul
-	-docker rmi -f $(DOCKER_IMAGE) 2>nul
+	-docker rm -f $(DOCKER_CONTAINER) 2>/dev/null || true
+	-docker rmi -f $(DOCKER_IMAGE) 2>/dev/null || true
 	@echo "Limpieza completa realizada"
 
 # Ejecutar todos los pasos
@@ -152,31 +148,3 @@ all: generate-data build run validate
 	@echo "  - Datos de salida: $(DATA_DIR)/output_data.csv"
 	@echo "  - Graficas: $(REPORT_DIR)/comparison_plots/"
 	@echo "  - Reporte: $(REPORT_DIR)/comparison_report.txt"
-
-# Target para crear directorios necesarios
-dirs:
-	@if not exist "$(DATA_DIR)" mkdir "$(DATA_DIR)"
-	@if not exist "$(REPORT_DIR)" mkdir "$(REPORT_DIR)"
-	@if not exist "$(REPORT_DIR)\comparison_plots" mkdir "$(REPORT_DIR)\comparison_plots"
-	@if not exist "$(SRC_DIR)" mkdir "$(SRC_DIR)"
-	@echo "Directorios creados"
-
-# Ayuda con ejemplos
-examples:
-	@echo "======================================"
-	@echo "  Ejemplos de uso"
-	@echo "======================================"
-	@echo ""
-	@echo "1. Flujo completo:"
-	@echo "   make setup"
-	@echo "   make generate-data"
-	@echo "   make build"
-	@echo "   make run"
-	@echo "   make validate"
-	@echo ""
-	@echo "2. Generar datos personalizados:"
-	@echo "   python python/generate_data.py --samples 1000 --features 20"
-	@echo ""
-	@echo "3. Solo validar (si ya tienes output_data.csv):"
-	@echo "   make validate"
-	@echo ""
