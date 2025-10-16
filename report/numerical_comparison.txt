@@ -3,14 +3,14 @@ COMPARACIÓN NUMÉRICA: PCA en C vs sklearn
 ======================================================================
 
 Forma de los datos:
-  - C output:      (10000, 2)
-  - sklearn output: (10000, 2)
+  - C output:      (800, 2)
+  - sklearn output: (800, 2)
 
 Métricas de error:
-  - MSE:           1.033383e-10
-  - MAE:           7.712193e-06
-  - Max diff:      4.997475e-05
-  - Mean diff:     7.712193e-06
+  - MSE:           9.607754e-09
+  - MAE:           8.814242e-05
+  - Max diff:      1.844567e-04
+  - Mean diff:     8.814242e-05
 
 Correlación por componente:
   - PC1: 1.000000
@@ -19,13 +19,13 @@ Correlación por componente:
 Estadísticas de diferencias:
 
   PC1:
-    Media:    1.699993e-09
-    Std:      6.806392e-06
-    Min:      -2.777355e-05
-    Max:      2.676863e-05
+    Media:    8.750001e-09
+    Std:      9.302231e-05
+    Min:      -1.708373e-04
+    Max:      1.262265e-04
 
   PC2:
-    Media:    2.799997e-09
-    Std:      1.266292e-05
-    Min:      -4.748975e-05
-    Max:      4.997475e-05
+    Media:    9.999999e-09
+    Std:      1.027733e-04
+    Min:      -1.446419e-04
+    Max:      1.844567e-04
