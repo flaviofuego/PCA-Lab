@@ -160,18 +160,6 @@ int main(int argc, char *argv[]) {
            model->explained_variance_ratio * 100);
     printf("\nOutput saved to: %s\n", output_file);
     
-    /* Print first few transformed samples (for verification) */
-    printf("\nFirst 5 transformed samples:\n");
-    int max_samples = (transformed->rows < 5) ? transformed->rows : 5;
-    for (int i = 0; i < max_samples; i++) {
-        printf("Sample %d: [", i + 1);
-        for (int j = 0; j < transformed->cols; j++) {
-            printf("%.6f", transformed->data[i][j]);
-            if (j < transformed->cols - 1) printf(", ");
-        }
-        printf("]\n");
-    }
-    
     printf("\n========================================\n");
     printf("PCA Completed Successfully!\n");
     printf("========================================\n\n");
