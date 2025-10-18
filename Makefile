@@ -88,14 +88,23 @@ build:
 run:
 	@echo "======================================"
 	@echo "  Ejecutando PCA en C (Docker)..."
+	@echo "  Timestamp: $(TIMESTAMP)"
 	@echo "======================================"
 	@echo "Montando volumenes y ejecutando contenedor..."
+ifeq ($(TIMESTAMP),true)
+	$(eval CURRENT_TIMESTAMP := $(shell date +%Y%m%d_%H%M%S))
+	docker run --rm -e TIMESTAMP="$(CURRENT_TIMESTAMP)" -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
+else
 	docker run --rm -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
+endif
 	@echo ""
 	@echo "======================================"
 	@echo "  PCA ejecutado exitosamente!"
 	@echo "======================================"
 	@echo "Resultados guardados en: $(DATA_DIR)/output_data.csv"
+ifeq ($(TIMESTAMP),true)
+	@echo "Archivo versionado: $(DATA_DIR)/output_data_$(CURRENT_TIMESTAMP).csv"
+endif
 	@echo ""
 
 # Compilar localmente (sin Docker) - requiere GCC instalado
@@ -117,10 +126,15 @@ run-local:
 validate:
 	@echo "======================================"
 	@echo "  Validando resultados..."
+	@echo "  Timestamp: $(TIMESTAMP)"
 	@echo "======================================"
 	@mkdir -p $(REPORT_DIR)
 	@mkdir -p $(REPORT_DIR)/comparison_plots
+ifeq ($(TIMESTAMP),true)
+	cd $(PYTHON_DIR) && python validate_pca.py --timestamp
+else
 	cd $(PYTHON_DIR) && python validate_pca.py
+endif
 	@echo ""
 	@echo "Validacion completada. Ver resultados en $(REPORT_DIR)/"
 

@@ -180,19 +180,20 @@ def save_to_csv(X, y, output_dir=None, filename='input_data.csv',
     df.to_csv(info_filepath, index=False)
     print(f"✓ Datos con etiquetas (para inspección): {info_filepath}")
     
-    # Siempre crear/actualizar enlaces simbólicos a los archivos más recientes
-    # Esto permite que el programa en C siempre use los últimos datos
-    latest_input = output_dir / 'input_data.csv'
-    latest_labels = output_dir / 'labels.csv'
-    latest_with_labels = output_dir / 'input_data_with_labels.csv'
-    
-    # En Windows, copiar en lugar de crear enlaces simbólicos
-    import shutil
-    shutil.copy2(filepath, latest_input)
-    shutil.copy2(labels_filepath, latest_labels)
-    shutil.copy2(info_filepath, latest_with_labels)
-    
+    # Solo crear enlaces si se usa timestamp (de lo contrario, los archivos ya son los "latest")
     if use_timestamp:
+        # Siempre crear/actualizar enlaces simbólicos a los archivos más recientes
+        # Esto permite que el programa en C siempre use los últimos datos
+        latest_input = output_dir / 'input_data.csv'
+        latest_labels = output_dir / 'labels.csv'
+        latest_with_labels = output_dir / 'input_data_with_labels.csv'
+        
+        # En Windows, copiar en lugar de crear enlaces simbólicos
+        import shutil
+        shutil.copy2(filepath, latest_input)
+        shutil.copy2(labels_filepath, latest_labels)
+        shutil.copy2(info_filepath, latest_with_labels)
+        
         print(f"\n✓ Enlaces a archivos actuales actualizados:")
         print(f"  - {latest_input}")
         print(f"  - {latest_labels}")

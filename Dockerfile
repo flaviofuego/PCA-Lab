@@ -30,4 +30,8 @@ CMD ["sh", "-c", "echo '========================================' && \
      gcc -o /app/pca_program /app/src/main.c /app/src/pca.c -lm -O2 -Wall && \
      echo 'Compilation successful!' && \
      echo '' && \
-     /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2"]
+     if [ -n \"$TIMESTAMP\" ]; then \
+       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2 \"$TIMESTAMP\"; \
+     else \
+       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2; \
+     fi"]
