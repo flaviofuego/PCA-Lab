@@ -16,6 +16,7 @@ SAMPLES ?= 20
 FEATURES ?= 5
 N_COMPONENTS ?= 2
 TYPE ?= classification
+CLUSTERS ?= 3
 TIMESTAMP ?= true
 
 # Colores para output (Linux)
@@ -45,6 +46,7 @@ help:
 	@echo "  FEATURES=<num>      - Número de dimensiones (default: 5)"
 	@echo "  N_COMPONENTS=<num>  - Número de componentes principales (default: 2)"
 	@echo "  TYPE=<tipo>         - Tipo de datos: classification o blobs (default: classification)"
+	@echo "  CLUSTERS=<num>      - Número de clusters para tipo blobs (default: 3)"
 	@echo "  TIMESTAMP=<bool>    - Versionar archivos con timestamp: true o false (default: true)"
 	@echo ""
 	@echo "Ejemplos de uso:"
@@ -52,6 +54,7 @@ help:
 	@echo "  make all-steps SAMPLES=500 FEATURES=8 TYPE=blobs"
 	@echo "  make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin versionado"
 	@echo "  make all-steps SAMPLES=1000 FEATURES=10 N_COMPONENTS=3   # 3 componentes principales"
+	@echo "  make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs CLUSTERS=5  # 5 clusters"
 	@echo "  make generate-data SAMPLES=2000 FEATURES=15 TYPE=classification"
 	@echo ""
 
@@ -67,12 +70,15 @@ generate-data:
 	@echo "======================================"
 	@echo "  Generando datos sintéticos..."
 	@echo "  Tipo: $(TYPE)"
+ifeq ($(TYPE),blobs)
+	@echo "  Clusters: $(CLUSTERS)"
+endif
 	@echo "  Timestamp: $(TIMESTAMP)"
 	@echo "======================================"
 ifeq ($(TIMESTAMP),true)
-	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE) --timestamp
+	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE) --clusters $(CLUSTERS) --timestamp
 else
-	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE)
+	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE) --clusters $(CLUSTERS)
 endif
 	@echo ""
 	@echo "Datos generados exitosamente"

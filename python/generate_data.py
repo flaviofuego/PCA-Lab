@@ -224,6 +224,10 @@ def main():
         help=f'Directorio de salida (default: {DATA_DIR})'
     )
     parser.add_argument(
+        '--clusters', '-c', type=int, default=3,
+        help='Número de clusters para datos tipo blobs (default: 3)'
+    )
+    parser.add_argument(
         '--timestamp', action='store_true',
         help='Agregar timestamp a los nombres de archivo para no sobrescribir'
     )
@@ -251,7 +255,7 @@ def main():
         X, y = generate_blobs_data(
             n_samples=args.samples,
             n_features=args.features,
-            centers=3
+            centers=args.clusters
         )
     
     # Guardar datos con o sin timestamp
