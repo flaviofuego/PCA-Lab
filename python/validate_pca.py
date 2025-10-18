@@ -7,14 +7,12 @@ Fecha: Octubre 2025
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from pathlib import Path
-import sys
-import argparse
+import sys, argparse
 from datetime import datetime
 
 # Determinar rutas absolutas basadas en la ubicación del script
