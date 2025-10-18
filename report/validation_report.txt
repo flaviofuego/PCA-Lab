@@ -4,17 +4,17 @@ REPORTE DE VALIDACIÓN - IMPLEMENTACIÓN PCA EN C
 
 DATOS
 ----------------------------------------------------------------------
-Dimensiones originales:  20 muestras x 5 características
-Dimensiones reducidas:   20 muestras x 2 componentes
-Reducción dimensional:   60.0%
+Dimensiones originales:  50 muestras x 4 características
+Dimensiones reducidas:   50 muestras x 2 componentes
+Reducción dimensional:   50.0%
 Número de clases:        2
 
 VARIANZA EXPLICADA
 ----------------------------------------------------------------------
 sklearn:
-  PC1: 49.70%
-  PC2: 27.26%
-  Total: 76.95%
+  PC1: 65.79%
+  PC2: 34.21%
+  Total: 100.00%
 
 VALIDACIÓN
 ----------------------------------------------------------------------
