@@ -58,3 +58,17 @@ dkms.conf
 data/*.csv
 report/*.txt
 report/*.png
+data/input_data_with_labels.csv
+data/input_data.csv
+data/labels.csv
+data/output_data.csv
+report/numerical_comparison.txt
+report/validation_report.txt
+report/comparison_plots/pca_comparison_scatter_20251018_195131.png
+report/comparison_plots/pca_comparison_scatter.png
+report/comparison_plots/pca_component_correlation_20251018_195131.png
+report/comparison_plots/pca_component_correlation.png
+report/comparison_plots/pca_contour_overlap_20251018_195131.png
+report/comparison_plots/pca_contour_overlap.png
+report/comparison_plots/pca_difference_distribution_20251018_195131.png
+report/comparison_plots/pca_difference_distribution.png
