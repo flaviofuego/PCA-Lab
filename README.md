@@ -46,6 +46,10 @@ make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs          # Datos con clusters
 make all-steps SAMPLES=1000 FEATURES=10 N_COMPONENTS=3      # Reducir a 3 componentes (default: 2)
 make all-steps SAMPLES=1000 FEATURES=15 N_COMPONENTS=5      # Reducir a 5 componentes
 
+# Controlar número de clusters (solo para TYPE=blobs)
+make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs CLUSTERS=5  # 5 clusters
+make all-steps SAMPLES=500 FEATURES=8 TYPE=blobs CLUSTERS=7    # 7 clusters
+
 # Control de versionado
 make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=true   # Con timestamp (default)
 make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin timestamp (sobrescribe)
@@ -71,9 +75,11 @@ make clean                               # Limpiar archivos generados
   
   ```bash
   make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs
+  make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs CLUSTERS=5  # 5 clusters
+  make all-steps SAMPLES=500 FEATURES=8 TYPE=blobs CLUSTERS=7    # 7 clusters
   ```
   
-  Los clusters generados se distribuyen naturalmente en el espacio multidimensional, y PCA los proyecta preservando su separación en 2D.
+  Los clusters generados se distribuyen naturalmente en el espacio multidimensional, y PCA los proyecta preservando su separación en 2D. El número de clusters es configurable (default: 3).
 
 ### 🗂️ Versionado de Archivos
 
