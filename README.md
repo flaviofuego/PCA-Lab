@@ -56,15 +56,37 @@ make clean                               # Limpiar archivos generados
 
 ### 📊 Tipos de Datos
 
-- **`TYPE=classification`** (default): Datos sintéticos con características informativas y redundantes
-- **`TYPE=blobs`**: Datos agrupados en clusters, útil para visualizar separación
+- **`TYPE=classification`** (default): Datos sintéticos de clasificación con características informativas y redundantes. Ideal para datasets realistas con múltiples dimensiones correlacionadas.
+
+- **`TYPE=blobs`**: Datos agrupados en **clusters** bien definidos. Perfecto para:
+  - Visualizar la separación de grupos después de PCA
+  - Demostrar cómo PCA preserva la estructura de clusters
+  - Validar que los componentes principales mantienen la agrupación natural
+  
+  Ejemplo de uso para datos con clusters:
+  
+  ```bash
+  make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs
+  ```
+  
+  Los clusters generados se distribuyen naturalmente en el espacio multidimensional, y PCA los proyecta preservando su separación en 2D.
 
 ### 🗂️ Versionado de Archivos
 
-Por defecto (`TIMESTAMP=true`), cada ejecución crea archivos versionados:
-- `input_data_20251016_143025.csv` (con timestamp)
-- `output_data_20251016_143025.csv` (con timestamp)
-- Los archivos `input_data.csv` y `output_data.csv` siempre apuntan a la versión más reciente
+Por defecto (`TIMESTAMP=true`), **todo el pipeline** crea archivos versionados:
+
+- **Entrada**: `input_data_20251016_143025.csv`, `labels_20251016_143025.csv`
+- **Salida C**: `output_data_20251016_143025.csv`
+- **Reportes**: `validation_report_20251016_143025.txt`, `numerical_comparison_20251016_143025.txt`
+- **Gráficas**: `pca_comparison_scatter_20251016_143025.png`, etc.
+
+Los archivos sin timestamp (`input_data.csv`, `output_data.csv`, etc.) siempre apuntan a la versión más reciente para uso del programa.
+
+**Ventajas del versionado:**
+
+- Preserva historial completo de experimentos
+- Permite comparar resultados entre diferentes configuraciones
+- No sobrescribe resultados anteriores accidentalmente
 
 Para sobrescribir archivos sin versionado: `TIMESTAMP=false`
 
