@@ -43,6 +43,7 @@ help:
 	@echo "Parámetros configurables:"
 	@echo "  SAMPLES=<num>       - Número de muestras (default: 20)"
 	@echo "  FEATURES=<num>      - Número de dimensiones (default: 5)"
+	@echo "  N_COMPONENTS=<num>  - Número de componentes principales (default: 2)"
 	@echo "  TYPE=<tipo>         - Tipo de datos: classification o blobs (default: classification)"
 	@echo "  TIMESTAMP=<bool>    - Versionar archivos con timestamp: true o false (default: true)"
 	@echo ""
@@ -50,6 +51,7 @@ help:
 	@echo "  make all-steps SAMPLES=1000 FEATURES=10"
 	@echo "  make all-steps SAMPLES=500 FEATURES=8 TYPE=blobs"
 	@echo "  make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin versionado"
+	@echo "  make all-steps SAMPLES=1000 FEATURES=10 N_COMPONENTS=3   # 3 componentes principales"
 	@echo "  make generate-data SAMPLES=2000 FEATURES=15 TYPE=classification"
 	@echo ""
 
@@ -89,13 +91,14 @@ run:
 	@echo "======================================"
 	@echo "  Ejecutando PCA en C (Docker)..."
 	@echo "  Timestamp: $(TIMESTAMP)"
+	@echo "  N_Components: $(N_COMPONENTS)"
 	@echo "======================================"
 	@echo "Montando volumenes y ejecutando contenedor..."
 ifeq ($(TIMESTAMP),true)
 	$(eval CURRENT_TIMESTAMP := $(shell date +%Y%m%d_%H%M%S))
-	docker run --rm -e TIMESTAMP="$(CURRENT_TIMESTAMP)" -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
+	docker run --rm -e TIMESTAMP="$(CURRENT_TIMESTAMP)" -e N_COMPONENTS="$(N_COMPONENTS)" -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
 else
-	docker run --rm -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
+	docker run --rm -e N_COMPONENTS="$(N_COMPONENTS)" -v "$(CURRENT_DIR)/$(DATA_DIR):/app/data" -v "$(CURRENT_DIR)/$(SRC_DIR):/app/src" $(DOCKER_IMAGE)
 endif
 	@echo ""
 	@echo "======================================"
@@ -119,8 +122,9 @@ compile-local:
 run-local:
 	@echo "======================================"
 	@echo "  Ejecutando PCA localmente..."
+	@echo "  N_Components: $(N_COMPONENTS)"
 	@echo "======================================"
-	./pca_program $(DATA_DIR)/input_data.csv $(DATA_DIR)/output_data.csv 2
+	./pca_program $(DATA_DIR)/input_data.csv $(DATA_DIR)/output_data.csv $(N_COMPONENTS)
 
 # Validar resultados
 validate:

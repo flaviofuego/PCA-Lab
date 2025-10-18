@@ -42,6 +42,10 @@ make all-steps SAMPLES=5000 FEATURES=25  # 5000 muestras × 25 dimensiones
 make all-steps SAMPLES=1000 FEATURES=10 TYPE=classification  # Datos de clasificación (default)
 make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs          # Datos con clusters
 
+# Controlar componentes principales
+make all-steps SAMPLES=1000 FEATURES=10 N_COMPONENTS=3      # Reducir a 3 componentes (default: 2)
+make all-steps SAMPLES=1000 FEATURES=15 N_COMPONENTS=5      # Reducir a 5 componentes
+
 # Control de versionado
 make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=true   # Con timestamp (default)
 make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin timestamp (sobrescribe)

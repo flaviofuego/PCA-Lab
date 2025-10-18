@@ -31,7 +31,7 @@ CMD ["sh", "-c", "echo '========================================' && \
      echo 'Compilation successful!' && \
      echo '' && \
      if [ -n \"$TIMESTAMP\" ]; then \
-       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2 \"$TIMESTAMP\"; \
+       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv ${N_COMPONENTS:-2} \"$TIMESTAMP\"; \
      else \
-       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv 2; \
+       /app/pca_program /app/data/input_data.csv /app/data/output_data.csv ${N_COMPONENTS:-2}; \
      fi"]
