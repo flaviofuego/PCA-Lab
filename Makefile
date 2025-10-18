@@ -16,6 +16,7 @@ SAMPLES ?= 20
 FEATURES ?= 5
 N_COMPONENTS ?= 2
 TYPE ?= classification
+TIMESTAMP ?= true
 
 # Colores para output (Linux)
 BLUE = \033[94m
@@ -43,10 +44,12 @@ help:
 	@echo "  SAMPLES=<num>       - Número de muestras (default: 20)"
 	@echo "  FEATURES=<num>      - Número de dimensiones (default: 5)"
 	@echo "  TYPE=<tipo>         - Tipo de datos: classification o blobs (default: classification)"
+	@echo "  TIMESTAMP=<bool>    - Versionar archivos con timestamp: true o false (default: true)"
 	@echo ""
 	@echo "Ejemplos de uso:"
 	@echo "  make all-steps SAMPLES=1000 FEATURES=10"
 	@echo "  make all-steps SAMPLES=500 FEATURES=8 TYPE=blobs"
+	@echo "  make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin versionado"
 	@echo "  make generate-data SAMPLES=2000 FEATURES=15 TYPE=classification"
 	@echo ""
 
@@ -62,8 +65,13 @@ generate-data:
 	@echo "======================================"
 	@echo "  Generando datos sintéticos..."
 	@echo "  Tipo: $(TYPE)"
+	@echo "  Timestamp: $(TIMESTAMP)"
 	@echo "======================================"
+ifeq ($(TIMESTAMP),true)
+	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE) --timestamp
+else
 	python $(PYTHON_DIR)/generate_data.py --samples $(SAMPLES) --features $(FEATURES) --type $(TYPE)
+endif
 	@echo ""
 	@echo "Datos generados exitosamente"
 

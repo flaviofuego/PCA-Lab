@@ -31,7 +31,7 @@ PCA-Lab/
 ## 🔧 Comandos Disponibles
 
 ```bash
-# Pipeline completo
+# Pipeline completo (con versionado automático)
 make all-steps                           # Genera datos + compila + ejecuta + valida
 
 # Con parámetros personalizados
@@ -41,6 +41,10 @@ make all-steps SAMPLES=5000 FEATURES=25  # 5000 muestras × 25 dimensiones
 # Elegir tipo de datos
 make all-steps SAMPLES=1000 FEATURES=10 TYPE=classification  # Datos de clasificación (default)
 make all-steps SAMPLES=1000 FEATURES=10 TYPE=blobs          # Datos con clusters
+
+# Control de versionado
+make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=true   # Con timestamp (default)
+make all-steps SAMPLES=1000 FEATURES=10 TIMESTAMP=false  # Sin timestamp (sobrescribe)
 
 # Pasos individuales
 make generate-data                       # Solo generar datos
@@ -54,6 +58,15 @@ make clean                               # Limpiar archivos generados
 
 - **`TYPE=classification`** (default): Datos sintéticos con características informativas y redundantes
 - **`TYPE=blobs`**: Datos agrupados en clusters, útil para visualizar separación
+
+### 🗂️ Versionado de Archivos
+
+Por defecto (`TIMESTAMP=true`), cada ejecución crea archivos versionados:
+- `input_data_20251016_143025.csv` (con timestamp)
+- `output_data_20251016_143025.csv` (con timestamp)
+- Los archivos `input_data.csv` y `output_data.csv` siempre apuntan a la versión más reciente
+
+Para sobrescribir archivos sin versionado: `TIMESTAMP=false`
 
 ## 📊 ¿Qué hace el proyecto?
 
