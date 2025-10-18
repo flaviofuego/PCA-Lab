@@ -14,6 +14,8 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from pathlib import Path
 import sys
+import argparse
+from datetime import datetime
 
 # Determinar rutas absolutas basadas en la ubicación del script
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -100,9 +102,9 @@ def apply_sklearn_pca(X, n_components=2):
     return X_sklearn, pca
 
 
-def compare_numerical(X_c, X_sklearn, output_dir=None):
+def compare_numerical(X_c, X_sklearn, output_dir=None, timestamp=None):
     """
-    Compara numéricamente los resultados de C y sklearn.
+    Compara numéricamente los resultados de PCA en C vs sklearn.
     
     Parameters:
     -----------
@@ -112,6 +114,15 @@ def compare_numerical(X_c, X_sklearn, output_dir=None):
         Datos proyectados por sklearn
     output_dir : str or Path
         Directorio para guardar resultados
+    timestamp : str
+        Timestamp para versionar archivos (opcional)
+        
+    Returns:
+    --------
+    X_c_adjusted : numpy.ndarray
+        Datos de C ajustados (con componentes alineados)
+    correlations : list
+        Correlaciones por componente
     """
     print("\n" + "=" * 70)
     print("COMPARACIÓN NUMÉRICA")
@@ -167,8 +178,12 @@ def compare_numerical(X_c, X_sklearn, output_dir=None):
     for i, corr in enumerate(correlations):
         print(f"  - PC{i+1}: {corr:.6f}")
     
+    # Determinar nombre de archivo
+    comparison_filename = f'numerical_comparison_{timestamp}.txt' if timestamp else 'numerical_comparison.txt'
+    comparison_path = output_path / comparison_filename
+    
     # Guardar resultados
-    with open(output_path / 'numerical_comparison.txt', 'w', encoding='utf-8') as f:
+    with open(comparison_path, 'w', encoding='utf-8') as f:
         f.write("=" * 70 + "\n")
         f.write("COMPARACIÓN NUMÉRICA: PCA en C vs sklearn\n")
         f.write("=" * 70 + "\n\n")
@@ -196,12 +211,18 @@ def compare_numerical(X_c, X_sklearn, output_dir=None):
             f.write(f"    Min:      {np.min(diff_comp):.6e}\n")
             f.write(f"    Max:      {np.max(diff_comp):.6e}\n")
     
-    print(f"\n✓ Resultados numéricos guardados en: {output_path / 'numerical_comparison.txt'}")
+    print(f"\n✓ Resultados numéricos guardados en: {comparison_path}")
+    
+    # Si se usa timestamp, copiar también a archivo "latest"
+    if timestamp:
+        latest_path = output_path / 'numerical_comparison.txt'
+        import shutil
+        shutil.copy2(comparison_path, latest_path)
     
     return X_c_adjusted, correlations
 
 
-def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
+def plot_comparisons(X_c, X_sklearn, y, output_dir=None, timestamp=None):
     """
     Genera gráficas comparativas.
     
@@ -215,6 +236,8 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
         Etiquetas
     output_dir : str or Path
         Directorio para guardar gráficas
+    timestamp : str
+        Timestamp para versionar archivos (opcional)
     """
     print("\n" + "=" * 70)
     print("GENERANDO GRÁFICAS COMPARATIVAS")
@@ -226,6 +249,12 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
         output_path = Path(output_dir).resolve()
     
     output_path.mkdir(parents=True, exist_ok=True)
+    
+    # Función auxiliar para crear nombres de archivo
+    def get_filename(base_name):
+        if timestamp:
+            return f"{base_name}_{timestamp}.png"
+        return f"{base_name}.png"
     
     # 1. Scatter plot lado a lado
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
@@ -253,7 +282,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
     axes[1].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(output_path / 'pca_comparison_scatter.png', dpi=300, bbox_inches='tight')
+    plt.savefig(output_path / get_filename('pca_comparison_scatter'), dpi=300, bbox_inches='tight')
     print(f"✓ Scatter comparison guardado")
     plt.close()
     
@@ -370,7 +399,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
             verticalalignment='top', bbox=props, fontweight='bold')
     
     plt.tight_layout()
-    plt.savefig(output_path / 'pca_contour_overlap.png', dpi=300, bbox_inches='tight')
+    plt.savefig(output_path / get_filename('pca_contour_overlap'), dpi=300, bbox_inches='tight')
     print(f"✓ Contour overlap guardado")
     plt.close()
     
@@ -398,7 +427,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
         axes[i].set_aspect('equal', adjustable='box')
     
     plt.tight_layout()
-    plt.savefig(output_path / 'pca_component_correlation.png', dpi=300, bbox_inches='tight')
+    plt.savefig(output_path / get_filename('pca_component_correlation'), dpi=300, bbox_inches='tight')
     print(f"✓ Component correlation guardado")
     plt.close()
     
@@ -423,10 +452,10 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(output_path / 'pca_difference_distribution.png', dpi=300, bbox_inches='tight')
+    plt.savefig(output_path / get_filename('pca_difference_distribution'), dpi=300, bbox_inches='tight')
     print(f"✓ Difference distribution guardado")
     plt.close()
-    
+
     print(f"Guardadas en: {output_path}\n")
     print(f"  Básicas (1):     scatter")
     print(f"  Avanzadas (1):   contour_overlap")
@@ -435,7 +464,7 @@ def plot_comparisons(X_c, X_sklearn, y, output_dir=None):
 
 
 def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations, 
-                   output_dir=None):
+                   output_dir=None, timestamp=None):
     """
     Genera un reporte completo de la comparación.
     """
@@ -448,7 +477,11 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
     else:
         output_path = Path(output_dir).resolve()
     
-    with open(output_path / 'validation_report.txt', 'w', encoding='utf-8') as f:
+    # Determinar nombre de archivo
+    report_filename = f'validation_report_{timestamp}.txt' if timestamp else 'validation_report.txt'
+    report_path = output_path / report_filename
+    
+    with open(report_path, 'w', encoding='utf-8') as f:
         f.write("=" * 70 + "\n")
         f.write("REPORTE DE VALIDACIÓN - IMPLEMENTACIÓN PCA EN C\n")
         f.write("=" * 70 + "\n\n")
@@ -507,14 +540,39 @@ def generate_report(X_input, X_c, X_sklearn, y, pca_model, correlations,
         f.write("\nTotal: 8 gráficas comparativas generadas\n")
         f.write("\n")
     
-    print(f"✓ Reporte final guardado en: {output_path / 'validation_report.txt'}")
+    print(f"✓ Reporte final guardado en: {report_path}")
+    
+    # Si se usa timestamp, copiar también a archivo "latest"
+    if timestamp:
+        latest_path = output_path / 'validation_report.txt'
+        import shutil
+        shutil.copy2(report_path, latest_path)
+        print(f"✓ Archivo actual actualizado: {latest_path}")
+    
+    return report_path
 
 
 def main():
     """Función principal."""
+    # Parsear argumentos
+    parser = argparse.ArgumentParser(
+        description='Valida la implementación de PCA en C comparándola con sklearn'
+    )
+    parser.add_argument(
+        '--timestamp', action='store_true',
+        help='Agregar timestamp a los nombres de archivo para no sobrescribir'
+    )
+    
+    args = parser.parse_args()
+    
+    # Generar timestamp si es necesario
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") if args.timestamp else None
+    
     print("\n" + "=" * 70)
     print(" " * 15 + "VALIDACIÓN DE PCA EN C")
     print("=" * 70)
+    if timestamp:
+        print(f"Modo: Versionado con timestamp ({timestamp})")
     print()
     
     try:
@@ -525,17 +583,22 @@ def main():
         X_sklearn, pca_model = apply_sklearn_pca(X_input, n_components=X_c.shape[1])
         
         # 3. Comparación numérica
-        X_c_adjusted, correlations = compare_numerical(X_c, X_sklearn)
+        X_c_adjusted, correlations = compare_numerical(X_c, X_sklearn, timestamp=timestamp)
         
         # 4. Generar gráficas
-        plot_comparisons(X_c_adjusted, X_sklearn, y)
+        plot_comparisons(X_c_adjusted, X_sklearn, y, timestamp=timestamp)
         
         # 5. Generar reporte
-        generate_report(X_input, X_c_adjusted, X_sklearn, y, pca_model, correlations)
+        generate_report(X_input, X_c_adjusted, X_sklearn, y, pca_model, correlations, timestamp=timestamp)
         
         print("\n" + "=" * 70)
         print("✓ VALIDACIÓN COMPLETADA EXITOSAMENTE")
         print("=" * 70)
+        
+        if timestamp:
+            print(f"\nArchivos versionados guardados con timestamp: {timestamp}")
+            print("Los archivos sin timestamp apuntan siempre a la versión más reciente")
+        
         print("\nRevisa los archivos generados en:")
         print("  - report/numerical_comparison.txt")
         print("  - report/validation_report.txt")
