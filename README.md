@@ -6,6 +6,8 @@ Implementación del algoritmo **PCA (Principal Component Analysis)** en C desde 
 
 ```bash
 # Ejecutar todo el pipeline (generar datos + compilar + ejecutar + validar)
+#si el wsl no tiene el make instalado, usar "apt install make" o  "sudo apt install make"
+
 make all-steps
 
 # Con parámetros personalizados
